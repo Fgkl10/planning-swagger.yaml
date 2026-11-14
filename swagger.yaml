@@ -1,0 +1,204 @@
+openapi: 3.0.3
+info:
+  title: Yanki v2 - Deck Version History
+  version: 1.0.0
+
+components:
+  securitySchemes:
+    token:
+      type: apiKey
+      in: header
+      name: token
+
+
+  schemas:
+    CardContent:
+      type: object
+      properties:
+        type:
+          type: string
+        question:
+          type: string
+        answer:
+          type: string
+    Card:
+      type: object
+      properties:
+        cardId:
+          type: integer
+          example: 1
+        ownerId:
+          type: string
+        cardContent:
+          $ref: '#/components/schemas/CardContent'
+
+    # Deck:
+    #   type: object
+    #   properties:
+    #     deckId:
+    #       type: number
+    #     ownerId:
+    #       type: string
+    #     parentId:
+    #       nullable: true
+    #       type: number
+    #     name:
+    #       type: string
+    #     cardIds:
+    #       type: array
+    #       items:
+    #         type: number
+    #     subdeckIds:
+    #       type: array
+    #       items:
+    #         type: number
+    Version:
+      type: object
+      properties:
+        versionId:
+          type: integer
+          example: 1
+        # deckId:
+        #   type: number
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+    RestoreVersionResponse:
+      type: object
+      properties:
+        versionId:
+          type: integer
+          example: 1
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: error message
+
+paths:
+  /v2/deck/{deckId}/versions:
+    get:
+      summary: List all saved versions of a deck
+      security:
+        - token: []
+      parameters:
+        - name: deckId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'List versions, newest first'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Version'
+        '400':
+          description: 'Invalid deckId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Invalid token'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'The requested card or deck exists, but the user does not own it and is not a site administrator.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/deck/{deckId}/versions/{versionId}:
+    get:
+      summary: view one version
+      security:
+        - token: []
+      parameters:
+        - name: deckId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'list a version'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '400':
+          description: 'Invalid deckId or versionId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Invalid token'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'The requested card or deck exists, but the user does not own it and is not a site administrator.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/deck/{deckId}/versions/{versionId}/restore:
+    post:
+      summary: Restore a deck to a previous version
+      security:
+        - token: []
+      parameters:
+        - name: deckId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 'return the version retored'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestoreVersionResponse'
+        '400':
+          description: 'Invalid deckId or versionId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 'Invalid token'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: 'The requested card or deck exists, but the user does not own it and is not a site administrator.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
